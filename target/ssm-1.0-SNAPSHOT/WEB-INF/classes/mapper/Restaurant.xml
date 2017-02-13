@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<mapper namespace="me.ele.redistemplate.mapper.RestaurantMapper">
+
+
+    <select id="getRestaurantByID" parameterType="String" resultType="me.ele.redistemplate.model.Restaurant">
+        select * from Restaurants where id = #{id}
+    </select>
+
+
+    <select id="getRestaurantByPinPaiName" parameterType="String" resultType="me.ele.redistemplate.model.Restaurant">
+        select * from Restaurants where pinpai_name = #{pinPaiName}
+    </select>
+
+    <!-- 这里namespace必须是UserMapper接口的路径” -->
+    <insert id="insertRestaurant" parameterType="me.ele.redistemplate.model.Restaurant">
+        insert into Restaurants (id, brand_Logotype, shop_name, pinpai_name, dianping_id, new_dom_id)
+        values(#{Restaurant.id},#{Restaurant.brand_Logotype},#{Restaurant.shop_name},#{Restaurant.pinpai_name},#{Restaurant.dianping_id},#{Restaurant.new_dom_id})
+        <!-- 这里sql结尾不能加分号，否则报“ORA-00911”的错误 -->
+    </insert>
+
+    <update id="updateRestaurant" parameterType="me.ele.redistemplate.model.Restaurant">
+        update Restaurants set
+        brand_Logotype = #{Restaurant.brand_Logotype},
+        shop_name = #{Restaurant.shop_name},
+        pinpai_name = #{Restaurant.pinpai_name},
+        dianping_id = #{Restaurant.dianping_id},
+        new_dom_id = #{Restaurant.new_dom_id}
+        where id = #{Restaurant.id}
+    </update>
+
+
+    <delete id="deleteRestaurant" parameterType="String">
+        delete from Restaurants where id = #{id}
+    </delete>
+
+</mapper>
