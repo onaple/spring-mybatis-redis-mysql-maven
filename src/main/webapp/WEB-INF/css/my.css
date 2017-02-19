@@ -1,0 +1,26 @@
+#area {
+    height: 300px;
+    width: 500px;
+    border: solid 1px #09c;
+}
+
+#search {
+    height: 200px;
+    width: 200px;
+    border: solid 1px #09c;
+}
+
+#myForm {
+    display: none;
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    width: 200px;
+    height: 20%;
+    margin-left: -350px;
+    padding: 3px 0 0 10px;
+    background: #7aa6da;
+    color: #333;
+    z-index: 9999;
+    border-radius: 5px;
+}

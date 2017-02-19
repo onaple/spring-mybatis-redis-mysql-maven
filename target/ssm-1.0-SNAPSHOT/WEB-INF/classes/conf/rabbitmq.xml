@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+     http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+     http://www.springframework.org/schema/rabbit
+     http://www.springframework.org/schema/rabbit/spring-rabbit-1.0.xsd">
+    <!--配置connection-factory，指定连接rabbit server参数 -->
+    <rabbit:connection-factory id="connectionFactory"
+                               host="${rabbit.host}"
+                              />
+
+    <!--通过指定下面的admin信息 -->
+    <rabbit:admin connection-factory="connectionFactory" auto-startup="true"/>
+
+    <!--定义queue -->
+    <rabbit:queue name="${rabbit.queue}" durable="true" auto-delete="false" exclusive="false"/>
+
+    <rabbit:fanout-exchange name="${rabbit.exchange}" durable="true" auto-delete="false">
+        <rabbit:bindings>
+            <rabbit:binding queue="${rabbit.queue}"/>
+        </rabbit:bindings>
+    </rabbit:fanout-exchange>
+
+    <!--生产者-->
+    <rabbit:template id="rabbitTemplate"
+                     connection-factory="connectionFactory"
+                     exchange="spittle.alerts.exchange"
+                     routing-key="spittle.alerts"
+                     queue="spittle.alerts.queue"/>
+
+
+    <!-- 消息接收者 -->
+    <bean id="messageConsumer" class="me.ele.ssm.spittr.consume.ConsumeBase"></bean>
+
+    <!-- queue litener  观察 监听模式 当有消息到达时会通知监听在对应的队列上的监听对象 -->
+    <rabbit:listener-container connection-factory="connectionFactory" acknowledge="manual"
+                               prefetch="${rabbit.prefetch}">
+        <rabbit:listener queue-names="${rabbit.queue}" ref="messageConsumer"/>
+    </rabbit:listener-container>
+
+</beans>

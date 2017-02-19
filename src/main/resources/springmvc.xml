@@ -12,28 +12,92 @@
 	http://www.springframework.org/schema/mvc/spring-mvc.xsd">
 
 
-
-
-    <!-- 定义跳转的文件的前后缀 ，视图模式配置-->
-    <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
-        <!-- 这里的配置我的理解是自动给后面action的方法return的字符串加上前缀和后缀，变成一个 可用的url地址 -->
-        <property name="prefix" value="/WEB-INF/jsp/" />
-        <property name="suffix" value=".jsp" />
-
+    <!-- 读取全局配置 -->
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:properties/rabbitmq.properties</value>
+                <value>classpath:properties/mysql-redis.properties</value>
+                <value>classpath:properties/log4j.properties</value>
+            </list>
+        </property>
+        <property name="fileEncoding" value="UTF-8"/>
+        <property name="ignoreResourceNotFound" value="false"/>
     </bean>
 
-    <!-- 加载配置文件 -->
-    <context:property-placeholder location="classpath:mysql-redis.properties" />
-
+    <!--springMVC注解驱动-->
     <mvc:annotation-driven/>
 
-    <!--<mvc:resources mapping="/WEB-INF/jsp/**" location="WEB-INF/jsp/"> </mvc:resources>-->
+    <!--mybatis的配置-->
+    <bean id="dataSource" class="org.apache.ibatis.datasource.pooled.PooledDataSource">
+        <property name="driver" value="${mysql.driver}"/>
+        <property name="url" value="${mysql.url}"/>
+        <property name="username" value="${mysql.username}"/>
+        <property name="password" value="${mysql.password}"/>
+    </bean>
+
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 自动扫描mapping.xml文件 -->
+        <property name="configLocation" value="classpath:conf/mybatis.xml"></property>
+        <property name="mapperLocations" value="classpath:mapper/Restaurant.xml"></property>
+    </bean>
+
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="me.ele.ssm.mapper"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+    </bean>
 
 
+    <!-- Jedis 连接池配置-->
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxTotal" value="${redis.pool.maxActive}"/>
+        <property name="maxIdle" value="${redis.pool.maxIdle}"/>
+        <property name="maxWaitMillis" value="${redis.pool.maxWait}"/>
+    </bean>
 
-    <import resource="applicationContext.xml"></import>
-    
-    <context:component-scan base-package="me.ele.redistemplate" />
+    <!-- Jedis ConnectionFactory 数据库连接配置-->
+    <bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+        <property name="hostName" value="${redis.hostname}"/>
+        <property name="port" value="${redis.port}"/>
+        <property name="poolConfig" ref="jedisPoolConfig"/>
+    </bean>
+
+    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate"
+          p:connection-factory-ref="jedisConnectionFactory"/>
+
+
+    <!-- Freemarker配置 -->
+    <bean id="freemarkerConfig"
+          class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+        <property name="templateLoaderPath" value="/WEB-INF/view/"/>
+        <property name="freemarkerSettings">
+            <props>
+                <prop key="template_update_delay">0</prop>
+                <prop key="default_encoding">UTF-8</prop>
+                <prop key="number_format">0.##########</prop>
+                <prop key="datetime_format">yyyy-MM-dd HH:mm:ss</prop>
+                <prop key="classic_compatible">true</prop>
+                <prop key="template_exception_handler">ignore</prop>
+            </props>
+        </property>
+    </bean>
+
+
+    <!--视图解释器 -->
+    <bean id="viewResolver"
+          class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+        <property name="suffix">
+            <value>.ftl</value>
+        </property>
+        <property name="contentType" value="text/html;charset=UTF-8"></property>
+    </bean>
+
+    <!--import rabbitmq.xml-->
+    <import resource="classpath*:conf/rabbitmq.xml"/>
+
+    <!--指定扫描目录-->
+    <context:component-scan base-package="me.ele.ssm"/>
 
 
 </beans>
